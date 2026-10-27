@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BuscadorKids - Aprende a Buscar en Internet y en Google Real</title>
+
+  <!-- Librería de confeti vía CDN para celebrar cada misión completada -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Fuente amigable para niños (con respaldo automático si no hay internet) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       VARIABLES DE COLOR Y ESTILOS GENERALES
+       ========================================================================== */
+    :root {
+      --azul-google: #4285F4;
+      --rojo-google: #EA4335;
+      --amarillo-google: #FBBC05;
+      --verde-google: #34A853;
+      --morado-juego: #7C4DFF;
+      --fondo-pagina: #F4F8FF;
+      --blanco: #FFFFFF;
+      --texto-oscuro: #202124;
+      --texto-gris: #5F6368;
+      --borde-suave: #DFE1E5;
+      --sombra-suave: 0 6px 20px rgba(66, 133, 244, 0.14);
+      --sombra-tarjeta: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --radio-grande: 24px;
+      --radio-medio: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', 'Fredoka', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--fondo-pagina);
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(66, 133, 244, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 90% 85%, rgba(251, 188, 5, 0.12) 0%, transparent 25%),
+        radial-gradient(circle at 85% 10%, rgba(52, 168, 83, 0.08) 0%, transparent 20%);
+      color: var(--texto-oscuro);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 60px;
+    }
+
+    /* ==========================================================================
+       BARRA SUPERIOR DE CAMBIO DE ETAPA (FASE 1: SIMULADOR | FASE 2: GOOGLE REAL)
+       ========================================================================== */
+    .barra-etapas {
+      max-width: 1180px;
+      width: 95%;
+      margin: 16px auto 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--blanco);
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 2px solid #E0E7FF;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .botones-etapa {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .boton-etapa {
+      border: 2px solid transparent;
+      background: #F1F3F4;
+      color: var(--texto-gris);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .boton-etapa:hover {
+      background: #E8F0FE;
+      color: var(--azul-google);
+    }
+
+    .boton-etapa.activa {
+      background: linear-gradient(135deg, #4285F4, #1967D2);
+      color: var(--blanco);
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.35);
+    }
+
+    .boton-etapa.fase-google.activa {
+      background: linear-gradient(135deg, #34A853, #1E8E3E);
+      box-shadow: 0 4px 12px rgba(52, 168, 83, 0.35);
+    }
+
+    .indicador-fase-derecha {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--morado-juego);
+      background: #EDE7F6;
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+
+    /* ==========================================================================
+       FASE 1: CONTENEDOR PRINCIPAL DEL SIMULADOR BUSCADORKIDS
+       ========================================================================== */
+    .contenedor-principal {
+      max-width: 1180px;
+      width: 95%;
+      margin: 16px auto 0;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .oculto {
+      display: none !important;
+    }
+
+    /* Panel Lateral / Flotante de Misión Actual */
+    .panel-mision {
+      background: linear-gradient(145deg, #2B1B54 0%, #432C7A 100%);
+      color: var(--blanco);
+      border-radius: var(--radio-grande);
+      padding: 22px;
+      box-shadow: 0 12px 28px rgba(43, 27, 84, 0.28);
+      border: 4px solid #FFD54F;
+      position: sticky;
+      top: 18px;
+      overflow: hidden;
+    }
+
+    .cabecera-mision {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .insignia-mision {
+      background: #FFD54F;
+      color: #2B1B54;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 6px 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 0 #FFA000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .contador-estrellas {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Barra de progreso de niveles */
+    .progreso-contenedor {
+      margin-bottom: 16px;
+    }
+
+    .progreso-texto {
+      font-size: 0.9rem;
+      color: #E0D7FF;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .barra-progreso-fondo {
+      width: 100%;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      padding: 2px;
+    }
+
+    .barra-progreso-relleno {
+      height: 100%;
+      width: 14%;
+      background: linear-gradient(90deg, #00E676, #FFEA00);
+      border-radius: 999px;
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Caja del texto de la misión */
+    .caja-reto {
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--texto-oscuro);
+      border-radius: var(--radio-medio);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: inset 0 -4px 0 #E0E7FF;
+      border: 2px solid #FFF;
+    }
+
+    .titulo-mision-actual {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      color: var(--morado-juego);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .texto-mision {
+      font-size: 1.28rem;
+      line-height: 1.38;
+      font-weight: 800;
+      color: #1A1A2E;
+    }
+
+    /* Pasos guía para los niños */
+    .pasos-guia {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: var(--radio-medio);
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .pasos-guia p {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pasos-guia p:last-child {
+      margin-bottom: 0;
+    }
+
+    .numero-paso {
+      background: #00E5FF;
+      color: #1A1A2E;
+      font-weight: 900;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .boton-pista {
+      margin-top: 14px;
+      width: 100%;
+      background: rgba(255, 213, 79, 0.2);
+      border: 2px dashed #FFD54F;
+      color: #FFE082;
+      padding: 10px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .boton-pista:hover {
+      background: rgba(255, 213, 79, 0.32);
+      transform: translateY(-2px);
+    }
+
+    .texto-pista {
+      display: none;
+      margin-top: 10px;
+      background: #FFF9C4;
+      color: #4E342E;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-left: 5px solid #FFB300;
+    }
+
+    /* ==========================================================================
+       ZONA DEL BUSCADOR (ESTILO GOOGLE KIDS)
+       ========================================================================== */
+    .panel-buscador {
+      background: var(--blanco);
+      border-radius: var(--radio-grande);
+      box-shadow: var(--sombra-tarjeta);
+      border: 2px solid #E8F0FE;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .barra-navegador {
+      background: #E8EAED;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #DADCE0;
+    }
+
+    .botones-ventana {
+      display: flex;
+      gap: 7px;
+    }
+
+    .punto-ventana {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+    }
+    .punto-rojo { background: #FF5F56; }
+    .punto-amarillo { background: #FFBD2E; }
+    .punto-verde { background: #27C93F; }
+
+    .url-falsa {
+      background: var(--blanco);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      color: var(--texto-gris);
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .cabecera-buscador {
+      padding: 28px 28px 0;
+      text-align: center;
+      background: linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%);
+    }
+
+    .logo-buscador {
+      font-family: 'Fredoka', 'Arial Rounded MT Bold', sans-serif;
+      font-size: 3.1rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .logo-icono {
+      font-size: 2.8rem;
+      margin-right: 6px;
+      display: inline-block;
+      animation: flotar 3s ease-in-out infinite;
+    }
+
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-6px) rotate(5deg); }
+    }
+
+    .c-azul { color: var(--azul-google); }
+    .c-rojo { color: var(--rojo-google); }
+    .c-amarillo { color: var(--amarillo-google); }
+    .c-verde { color: var(--verde-google); }
+    .insignia-kids {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      font-size: 1.2rem;
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin-left: 8px;
+      transform: rotate(-6deg);
+      box-shadow: 0 4px 10px rgba(255, 107, 107, 0.35);
+    }
+
+    .contenedor-barra-busqueda {
+      max-width: 680px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .caja-input {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--blanco);
+      border: 3px solid #AECBFA;
+      border-radius: 999px;
+      padding: 6px 18px;
+      box-shadow: var(--sombra-suave);
+      transition: all 0.25s;
+    }
+
+    .caja-input:focus-within {
+      border-color: var(--azul-google);
+      box-shadow: 0 8px 25px rgba(66, 133, 244, 0.28);
+      transform: scale(1.01);
+    }
+
+    .icono-lupa-input {
+      font-size: 1.5rem;
+      margin-right: 10px;
+      user-select: none;
+    }
+
+    .input-busqueda {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--texto-oscuro);
+      padding: 8px 0;
+      background: transparent;
+    }
+
+    .input-busqueda::placeholder {
+      color: #9AA0A6;
+      font-weight: 600;
+    }
+
+    .boton-limpiar {
+      background: #F1F3F4;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      color: var(--texto-gris);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      transition: background 0.2s;
+    }
+
+    .boton-limpiar:hover {
+      background: #DADCE0;
+      color: var(--rojo-google);
+    }
+
+    .boton-buscar {
+      background: linear-gradient(135deg, #4285F4 0%, #1967D2 100%);
+      color: var(--blanco);
+      border: none;
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #174EA6, 0 8px 18px rgba(66, 133, 244, 0.35);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .boton-buscar:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+
+    .boton-buscar:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #174EA6;
+    }
+
+    /* ==========================================================================
+       PESTAÑAS DE NAVEGACIÓN (TODO, IMÁGENES, VIDEOS)
+       ========================================================================== */
+    .barra-pestanas {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      border-bottom: 2px solid #E8EAED;
+      padding: 0 20px;
+      background: var(--blanco);
+    }
+
+    .pestana {
+      background: #F8F9FA;
+      border: 2px solid transparent;
+      border-bottom: none;
+      padding: 12px 24px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--texto-gris);
+      cursor: pointer;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      position: relative;
+      top: 2px;
+    }
+
+    .pestana:hover {
+      background: #E8F0FE;
+      color: var(--azul-google);
+    }
+
+    .pestana.activa {
+      background: var(--blanco);
+      color: var(--azul-google);
+      border-color: #E8EAED;
+      border-bottom: 4px solid var(--azul-google);
+      font-weight: 700;
+      transform: translateY(-1px);
+    }
+
+    .icono-pestana {
+      font-size: 1.4rem;
+    }
+
+    /* ==========================================================================
+       ZONA DE RESULTADOS DE BÚSQUEDA (SIMULADOR)
+       ========================================================================== */
+    .zona-resultados {
+      padding: 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .estado-inicial {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--texto-gris);
+    }
+
+    .ilustracion-inicial {
+      font-size: 4.5rem;
+      margin-bottom: 12px;
+    }
+
+    .estado-inicial h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.7rem;
+      color: var(--texto-oscuro);
+      margin-bottom: 8px;
+    }
+
+    .estado-inicial p {
+      font-size: 1.2rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .mensaje-alerta {
+      background: #FFF8E1;
+      border: 3px solid #FFB300;
+      border-radius: var(--radio-grande);
+      padding: 24px;
+      text-align: center;
+      max-width: 640px;
+      margin: 15px auto;
+      box-shadow: 0 8px 20px rgba(255, 179, 0, 0.15);
+      animation: sacudir 0.45s ease-in-out;
+    }
+
+    @keyframes sacudir {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    .icono-alerta {
+      font-size: 3.4rem;
+      margin-bottom: 8px;
+    }
+
+    .titulo-alerta {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      color: #E65100;
+      margin-bottom: 8px;
+    }
+
+    .detalle-alerta {
+      font-size: 1.15rem;
+      color: #5D4037;
+      font-weight: 700;
+    }
+
+    /* RESULTADOS DE TEXTO ("TODO") */
+    .lista-resultados-todo {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 720px;
+    }
+
+    .tarjeta-resultado-todo {
+      background: var(--blanco);
+      border: 2px solid #E0E7FF;
+      border-radius: var(--radio-medio);
+      padding: 18px 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .tarjeta-resultado-todo:hover {
+      border-color: var(--azul-google);
+      box-shadow: 0 8px 20px rgba(66, 133, 244, 0.16);
+      transform: translateY(-3px);
+    }
+
+    .url-resultado {
+      font-size: 0.92rem;
+      color: var(--verde-google);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .titulo-resultado-todo {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.45rem;
+      color: #1A0DAB;
+      margin-bottom: 6px;
+      text-decoration: underline;
+    }
+
+    .descripcion-resultado-todo {
+      font-size: 1.18rem;
+      color: #3C4043;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    /* RESULTADOS DE IMÁGENES */
+    .grid-resultados-imagenes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+    }
+
+    .tarjeta-resultado-imagen {
+      background: var(--blanco);
+      border: 3px solid #E0E7FF;
+      border-radius: var(--radio-medio);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.22s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tarjeta-resultado-imagen:hover {
+      border-color: var(--azul-google);
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 12px 24px rgba(66, 133, 244, 0.2);
+    }
+
+    .lienzo-imagen {
+      height: 175px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      padding: 15px;
+      user-select: none;
+    }
+
+    .pie-imagen {
+      padding: 14px;
+      background: var(--blanco);
+      border-top: 2px solid #F1F3F4;
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--texto-oscuro);
+    }
+
+    /* RESULTADOS DE VIDEOS */
+    .grid-resultados-videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    .tarjeta-resultado-video {
+      background: var(--blanco);
+      border: 3px solid #E0E7FF;
+      border-radius: var(--radio-medio);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.22s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tarjeta-resultado-video:hover {
+      border-color: var(--rojo-google);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(234, 67, 53, 0.2);
+    }
+
+    .miniatura-video {
+      height: 155px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.2rem;
+      position: relative;
+      user-select: none;
+    }
+
+    .boton-play-superpuesto {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(234, 67, 53, 0.95);
+      color: var(--blanco);
+      width: 46px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .duracion-video {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.78);
+      color: var(--blanco);
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .info-video {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .titulo-video {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.2rem;
+      color: var(--texto-oscuro);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .canal-video {
+      font-size: 0.95rem;
+      color: var(--texto-gris);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       FASE 2: "¡AHORA HAGÁMOSLO EN GOOGLE REAL!" (SESIÓN DE INVESTIGACIÓN REAL)
+       ========================================================================== */
+    .contenedor-google-real {
+      max-width: 1050px;
+      width: 95%;
+      margin: 20px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Banner Hero de la Fase 2 */
+    .hero-google-real {
+      background: linear-gradient(135deg, #1E3C72 0%, #2A5298 60%, #4285F4 100%);
+      color: var(--blanco);
+      border-radius: var(--radio-grande);
+      padding: 30px;
+      border: 5px solid #FFD54F;
+      box-shadow: 0 14px 34px rgba(30, 60, 114, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hero-fila-superior {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .hero-textos h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 2.3rem;
+      color: #FFD54F;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-textos p {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #E8F0FE;
+      max-width: 640px;
+      line-height: 1.45;
+    }
+
+    .boton-abrir-google-grande {
+      background: var(--blanco);
+      color: var(--texto-oscuro);
+      border: 4px solid #FFD54F;
+      padding: 16px 28px;
+      border-radius: 999px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 0 #F9A825, 0 12px 24px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .boton-abrir-google-grande:hover {
+      transform: translateY(-3px) scale(1.03);
+      background: #FFFDE7;
+    }
+
+    /* Caja para el nombre del estudiante y curso */
+    .datos-estudiante-caja {
+      background: rgba(255, 255, 255, 0.14);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radio-medio);
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .campo-estudiante label {
+      display: block;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      color: #FFE082;
+      margin-bottom: 6px;
+    }
+
+    .campo-estudiante input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 2px solid #FFF;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--texto-oscuro);
+      outline: none;
+    }
+
+    .campo-estudiante input:focus {
+      border-color: #FFD54F;
+      box-shadow: 0 0 0 4px rgba(255, 213, 79, 0.35);
+    }
+
+    /* Guía rápida para copiar y pegar links */
+    .guia-copiar-link {
+      background: #FFF8E1;
+      border: 3px dashed #FFB300;
+      border-radius: var(--radio-medio);
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #4E342E;
+      font-weight: 700;
+      font-size: 1.08rem;
+      line-height: 1.45;
+    }
+
+    .guia-icono {
+      font-size: 2.6rem;
+      flex-shrink: 0;
+    }
+
+    .tecla-atajo {
+      background: #FFF;
+      border: 2px solid #FFB300;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-weight: 900;
+      color: #D84315;
+    }
+
+    /* Tarjetas de Preguntas en Google Real */
+    .lista-retos-google {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tarjeta-reto-google {
+      background: var(--blanco);
+      border: 3px solid #DCE6F7;
+      border-radius: var(--radio-grande);
+      padding: 24px;
+      box-shadow: var(--sombra-tarjeta);
+      transition: all 0.25s;
+      position: relative;
+    }
+
+    .tarjeta-reto-google.completada {
+      border-color: var(--verde-google);
+      background: linear-gradient(180deg, #FFFFFF 0%, #F1F8E9 100%);
+    }
+
+    .cabecera-reto-google {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .numero-reto-google {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--blanco);
+      background: var(--morado-juego);
+      padding: 6px 16px;
+      border-radius: 999px;
+    }
+
+    .insignia-tipo-busqueda {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tipo-todo {
+      background: #E8F0FE;
+      color: #1967D2;
+    }
+
+    .tipo-imagen {
+      background: #FEF7E0;
+      color: #B06000;
+    }
+
+    .tipo-video {
+      background: #FCE8E6;
+      color: #C5221F;
+    }
+
+    .pregunta-reto-google {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--texto-oscuro);
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .instruccion-reto-google {
+      font-size: 1.05rem;
+      color: var(--texto-gris);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .fila-respuesta-google {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .input-respuesta-google {
+      flex: 1;
+      min-width: 240px;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 700;
+      border: 3px solid #AECBFA;
+      border-radius: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .input-respuesta-google:focus {
+      border-color: var(--azul-google);
+      box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.18);
+    }
+
+    .tarjeta-reto-google.completada .input-respuesta-google {
+      border-color: var(--verde-google);
+      background: #FFFFFF;
+    }
+
+    .boton-ir-google-mini {
+      background: #E8F0FE;
+      color: var(--azul-google);
+      border: 2px solid #AECBFA;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .boton-ir-google-mini:hover {
+      background: var(--azul-google);
+      color: var(--blanco);
+    }
+
+    .boton-comprobar-reto {
+      background: linear-gradient(135deg, #34A853, #1E8E3E);
+      color: var(--blanco);
+      border: none;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #137333;
+      transition: all 0.15s;
+    }
+
+    .boton-comprobar-reto:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .boton-comprobar-reto:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #137333;
+    }
+
+    .feedback-reto-google {
+      margin-top: 12px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .feedback-reto-google.exito {
+      display: block;
+      background: #E6F4EA;
+      color: #137333;
+      border-left: 5px solid #34A853;
+    }
+
+    .feedback-reto-google.error {
+      display: block;
+      background: #FFF3E0;
+      color: #E65100;
+      border-left: 5px solid #FF9800;
+    }
+
+    /* ==========================================================================
+       TARJETA DE FELICITACIONES FINAL Y DESCARGA DE HOJA DE RESPUESTAS
+       ========================================================================== */
+    .panel-felicitaciones-final {
+      background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%);
+      border: 6px solid #FFD54F;
+      border-radius: 30px;
+      padding: 36px 28px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(251, 188, 5, 0.28);
+      margin-top: 10px;
+      animation: aparecer 0.4s ease-out;
+    }
+
+    .trofeo-gigante {
+      font-size: 5rem;
+      margin-bottom: 10px;
+      display: inline-block;
+      animation: saltar 0.9s ease infinite alternate;
+    }
+
+    .panel-felicitaciones-final h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 2.5rem;
+      color: #1B5E20;
+      margin-bottom: 10px;
+    }
+
+    .panel-felicitaciones-final p {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #3E2723;
+      max-width: 680px;
+      margin: 0 auto 26px;
+      line-height: 1.45;
+    }
+
+    .contenedor-botones-descarga {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .boton-descargar-hoja {
+      background: linear-gradient(135deg, #4285F4 0%, #1967D2 100%);
+      color: var(--blanco);
+      border: none;
+      border-radius: 999px;
+      padding: 18px 34px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #0D47A1, 0 12px 24px rgba(66, 133, 244, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .boton-descargar-hoja:hover {
+      transform: translateY(-3px) scale(1.02);
+      filter: brightness(1.08);
+    }
+
+    .boton-descargar-imagen {
+      background: linear-gradient(135deg, #34A853 0%, #1B5E20 100%);
+      box-shadow: 0 6px 0 #1B5E20, 0 12px 24px rgba(52, 168, 83, 0.38);
+    }
+
+    /* ==========================================================================
+       MODAL DE CELEBRACIÓN Y "SIGUIENTE MISIÓN"
+       ========================================================================== */
+    .modal-fondo {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 46, 0.72);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-fondo.visible {
+      display: flex;
+      animation: aparecer 0.3s ease-out;
+    }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes saltar {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-10px) scale(1.08); }
+    }
+
+    .modal-celebracion {
+      background: var(--blanco);
+      border: 6px solid #FFD54F;
+      border-radius: 30px;
+      padding: 34px 30px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .icono-celebracion {
+      font-size: 4.8rem;
+      margin-bottom: 10px;
+      display: inline-block;
+      animation: saltar 0.8s ease infinite alternate;
+    }
+
+    .titulo-celebracion {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 2.2rem;
+      color: var(--verde-google);
+      margin-bottom: 10px;
+    }
+
+    .mensaje-celebracion {
+      font-size: 1.25rem;
+      color: var(--texto-oscuro);
+      font-weight: 700;
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .boton-siguiente {
+      background: linear-gradient(135deg, #34A853 0%, #1E8E3E 100%);
+      color: var(--blanco);
+      border: none;
+      border-radius: 999px;
+      padding: 16px 36px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #137333, 0 10px 25px rgba(52, 168, 83, 0.4);
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .boton-siguiente:hover {
+      transform: translateY(-3px) scale(1.03);
+      filter: brightness(1.05);
+    }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN
+       ========================================================================== */
+    @media (max-width: 900px) {
+      .contenedor-principal {
+        grid-template-columns: 1fr;
+      }
+      .panel-mision {
+        position: static;
+      }
+      .logo-buscador {
+        font-size: 2.4rem;
+      }
+      .contenedor-barra-busqueda {
+        flex-direction: column;
+      }
+      .caja-input, .boton-buscar {
+        width: 100%;
+        justify-content: center;
+      }
+      .pestana {
+        padding: 10px 14px;
+        font-size: 1.05rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       BARRA SUPERIOR DE ETAPAS DEL JUEGO
+       ========================================================================== -->
+  <nav class="barra-etapas" aria-label="Etapas de aprendizaje">
+    <div class="botones-etapa">
+      <button type="button" class="boton-etapa activa" id="btn-ir-fase1">
+        🎮 Parte 1: Entrenamiento en BuscadorKids (7 Retos)
+      </button>
+      <button type="button" class="boton-etapa fase-google" id="btn-ir-fase2">
+        🌐 Parte 2: ¡Ahora hagámoslo en Google Real!
+      </button>
+    </div>
+    <div class="indicador-fase-derecha" id="resumen-total-arriba">
+      🕵️‍♂️ Modo Detective de Internet
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       PARTE 1: SIMULADOR "BUSCADORKIDS" (7 NIVELES)
+       ========================================================================== -->
+  <main class="contenedor-principal" id="vista-fase-1">
+    <!-- Panel de "Misión Actual" -->
+    <aside class="panel-mision" aria-label="Misión Actual">
+      <div class="cabecera-mision">
+        <span class="insignia-mision" id="etiqueta-nivel">🎯 Misión 1 de 7</span>
+        <span class="contador-estrellas" id="contador-estrellas">⭐ 0 / 7</span>
+      </div>
+
+      <div class="progreso-contenedor">
+        <div class="progreso-texto">
+          <span>Progreso de Entrenamiento</span>
+          <span id="porcentaje-progreso">0%</span>
+        </div>
+        <div class="barra-progreso-fondo">
+          <div class="barra-progreso-relleno" id="barra-progreso"></div>
+        </div>
+      </div>
+
+      <div class="caja-reto">
+        <div class="titulo-mision-actual">
+          <span>🕵️‍♂️ Misión Actual:</span>
+        </div>
+        <p class="texto-mision" id="texto-mision">
+          Cargando misión...
+        </p>
+      </div>
+
+      <div class="pasos-guia">
+        <p><span class="numero-paso">1</span> Lee la misión con atención.</p>
+        <p><span class="numero-paso">2</span> Escribe palabras clave en la barra.</p>
+        <p><span class="numero-paso">3</span> Elige la pestaña correcta (<strong>Todo, Imágenes o Videos</strong>).</p>
+        <p><span class="numero-paso">4</span> Haz clic en la respuesta correcta.</p>
+      </div>
+
+      <button type="button" class="boton-pista" id="boton-pista">
+        💡 ¿Necesitas una pista? Haz clic aquí
+      </button>
+      <div class="texto-pista" id="texto-pista"></div>
+    </aside>
+
+    <!-- Interfaz del motor de búsqueda BuscadorKids -->
+    <section class="panel-buscador" aria-label="Motor de búsqueda BuscadorKids">
+      <div class="barra-navegador">
+        <div class="botones-ventana">
+          <span class="punto-ventana punto-rojo"></span>
+          <span class="punto-ventana punto-amarillo"></span>
+          <span class="punto-ventana punto-verde"></span>
+        </div>
+        <div class="url-falsa">
+          🔒 <span>https://www.buscadorkids.edu.co</span>
+        </div>
+      </div>
+
+      <header class="cabecera-buscador">
+        <div class="logo-buscador">
+          <span class="logo-icono">🔎</span>
+          <span class="c-azul">B</span><span class="c-rojo">u</span><span class="c-amarillo">s</span><span class="c-azul">c</span><span class="c-verde">a</span><span class="c-rojo">d</span><span class="c-amarillo">o</span><span class="c-azul">r</span>
+          <span class="insignia-kids">Kids</span>
+        </div>
+
+        <form class="contenedor-barra-busqueda" id="formulario-busqueda" autocomplete="off">
+          <div class="caja-input">
+            <span class="icono-lupa-input">🔍</span>
+            <input
+              type="text"
+              id="input-busqueda"
+              class="input-busqueda"
+              placeholder="Escribe aquí lo que quieres buscar..."
+              aria-label="Barra de búsqueda"
+            />
+            <button type="button" class="boton-limpiar" id="boton-limpiar" title="Borrar texto">✕</button>
+          </div>
+          <button type="submit" class="boton-buscar">
+            🚀 Buscar
+          </button>
+        </form>
+
+        <nav class="barra-pestanas" aria-label="Filtros de búsqueda">
+          <button type="button" class="pestana activa" data-pestana="Todo">
+            <span class="icono-pestana">📄</span> Todo
+          </button>
+          <button type="button" class="pestana" data-pestana="Imágenes">
+            <span class="icono-pestana">🖼️</span> Imágenes
+          </button>
+          <button type="button" class="pestana" data-pestana="Videos">
+            <span class="icono-pestana">🎬</span> Videos
+          </button>
+        </nav>
+      </header>
+
+      <div class="zona-resultados" id="zona-resultados"></div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       PARTE 2: "¡AHORA HAGÁMOSLO EN GOOGLE REAL!"
+       ========================================================================== -->
+  <section class="contenedor-google-real oculto" id="vista-fase-2" aria-label="Misiones en Google Real">
+    <!-- Encabezado y datos del estudiante -->
+    <div class="hero-google-real">
+      <div class="hero-fila-superior">
+        <div class="hero-textos">
+          <h1>🌐 ¡Ahora hagámoslo en Google!</h1>
+          <p>
+            ¡Ya eres un experto en BuscadorKids! Ahora abre el <strong>Google de verdad</strong>, investiga estas nuevas preguntas, escribe tus respuestas o pega el link si es imagen o video.
+          </p>
+        </div>
+        <a
+          href="https://www.google.com/?safe=active"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="boton-abrir-google-grande"
+        >
+          🔎 Abrir Google Real ↗
+        </a>
+      </div>
+
+      <!-- Datos del estudiante para la Hoja de Respuestas descargable -->
+      <div class="datos-estudiante-caja">
+        <div class="campo-estudiante">
+          <label for="nombre-estudiante">👧👦 Tu Nombre y Apellido:</label>
+          <input
+            type="text"
+            id="nombre-estudiante"
+            placeholder="Escribe aquí tu nombre completo..."
+          />
+        </div>
+        <div class="campo-estudiante">
+          <label for="grado-estudiante">🏫 Tu Grado o Curso:</label>
+          <input
+            type="text"
+            id="grado-estudiante"
+            placeholder="Ej: 2° de Primaria"
+            value="2° de Primaria"
+          />
+        </div>
+        <div class="campo-estudiante">
+          <label>🌟 Retos de Google Completados:</label>
+          <div style="font-size: 1.35rem; font-weight: 900; color: #FFD54F; padding: 8px 0;" id="contador-google-real">
+            0 de 6 completados
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guía amigable de cómo copiar y pegar un link para niños -->
+    <div class="guia-copiar-link">
+      <div class="guia-icono">💡📋</div>
+      <div>
+        <strong>¿Cómo copiar y pegar el link de una Imagen o un Video?</strong><br />
+        1️⃣ Cuando encuentres la imagen o el video en Google, mira la barra de arriba del navegador (donde empieza con <code>https://...</code>), haz clic sobre ella y presiona <span class="tecla-atajo">Ctrl + C</span> (o clic derecho ➔ <strong>Copiar</strong>).<br />
+        2️⃣ Regresa aquí, haz clic en la cajita de respuesta y presiona <span class="tecla-atajo">Ctrl + V</span> (o clic derecho ➔ <strong>Pegar</strong>).
+      </div>
+    </div>
+
+    <!-- Contenedor donde se generan dinámicamente las preguntas de Google Real -->
+    <div class="lista-retos-google" id="lista-retos-google"></div>
+
+    <!-- Panel Final de Felicitaciones y Descarga (aparece al completar todas las preguntas) -->
+    <div class="panel-felicitaciones-final oculto" id="panel-felicitaciones-final">
+      <div class="trofeo-gigante">🏆🎉🎓</div>
+      <h2>¡FELICITACIONES, SÚPER DETECTIVE!</h2>
+      <p>
+        Has completado los 7 retos de entrenamiento y todas las búsquedas en el Google Real.
+        ¡Ya puedes descargar tu <strong>Hoja de Respuestas oficial</strong> con todo completado!
+      </p>
+      <div class="contenedor-botones-descarga">
+        <button type="button" class="boton-descargar-hoja boton-descargar-imagen" id="btn-descargar-png">
+          🖼️ Descargar Hoja de Respuestas (Imagen PNG)
+        </button>
+        <button type="button" class="boton-descargar-hoja" id="btn-descargar-html">
+          📥 Descargar Hoja de Respuestas (Con Links Clicables)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       MODAL DE VICTORIA / TRANSICIÓN ENTRE MISIONES
+       ========================================================================== -->
+  <div class="modal-fondo" id="modal-victoria" role="dialog" aria-modal="true">
+    <div class="modal-celebracion">
+      <div class="icono-celebracion" id="icono-modal">🏆</div>
+      <h2 class="titulo-celebracion" id="titulo-modal">¡Misión Cumplida!</h2>
+      <p class="mensaje-celebracion" id="mensaje-modal">
+        ¡Encontraste la información correcta como todo un experto!
+      </p>
+      <button type="button" class="boton-siguiente" id="boton-siguiente-mision">
+        Siguiente Misión ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       LÓGICA DEL JUEGO Y BASES DE DATOS (JAVASCRIPT PURO)
+       ========================================================================== -->
+  <script>
+    /* ==========================================================================
+       1A. BASE DE DATOS DE LA FASE 1: 7 MISIONES SIMULADAS EN "BUSCADORKIDS"
+       ==========================================================================
+       ¡HOLA PROFESOR/A!
+       Aquí puedes modificar o agregar retos a la Parte 1 (Simulador).
+       ========================================================================== */
+    const MISIONES = [
+      // ------------------------- RETO 1 -------------------------
+      {
+        id: 1,
+        mision: "¿Cuál es el animal más pesado del mundo? Búscalo y haz clic en la respuesta.",
+        palabrasClave: ["animal mas pesado", "animal mas grande", "ballena", "ballena azul"],
+        pestanaRequerida: "Todo",
+        pista: "Escribe «animal mas pesado» o «ballena azul» y asegúrate de estar en la pestaña 📄 Todo.",
+        explicacionExito: "¡Exacto! La Ballena Azul es el animal más pesado y grande de todo el planeta.",
+        resultados: [
+          {
+            titulo: "El Elefante Africano - Enciclopedia Animal",
+            url: "www.mundoanimal.edu › elefante-africano",
+            descripcion: "El elefante es el animal más pesado que camina en la tierra, pero no es el más pesado del océano ni del mundo.",
+            correcto: false
+          },
+          {
+            titulo: "La Ballena Azul: El animal más pesado del mundo",
+            url: "www.natgeokids.edu › animales › ballena-azul",
+            descripcion: "🐋 ¡Increíble! La Ballena Azul es el animal más pesado del mundo. Puede llegar a pesar tanto como 30 elefantes juntos.",
+            correcto: true
+          },
+          {
+            titulo: "La Jirafa: El animal más alto de la sabana",
+            url: "www.curiosidadeskids.edu › jirafas",
+            descripcion: "Gracias a su largo cuello, la jirafa es el animal más alto del mundo, aunque no es el más pesado.",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 2 -------------------------
+      {
+        id: 2,
+        mision: "¡Necesitamos una foto del Sistema Solar! Búscala en la sección de imágenes.",
+        palabrasClave: ["sistema solar", "planetas"],
+        pestanaRequerida: "Imágenes",
+        pista: "Escribe «sistema solar» o «planetas» y cambia a la pestaña 🖼️ Imágenes.",
+        explicacionExito: "¡Súper bien! Usaste la pestaña de Imágenes para encontrar la foto del Sistema Solar y sus planetas.",
+        resultados: [
+          {
+            emoji: "☀️🪐🌍🌕✨",
+            fondo: "linear-gradient(135deg, #0F2027, #203A43, #2C5364)",
+            titulo: "El Sistema Solar y sus Planetas",
+            correcto: true
+          },
+          {
+            emoji: "⚽🏀🎾🏐",
+            fondo: "linear-gradient(135deg, #FFE0B2, #FFCC80)",
+            titulo: "Balones de Deportes Redondos",
+            correcto: false
+          },
+          {
+            emoji: "🌻🌼🌷🌹",
+            fondo: "linear-gradient(135deg, #C8E6C9, #A5D6A7)",
+            titulo: "Flores del Jardín en Primavera",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 3 -------------------------
+      {
+        id: 3,
+        mision: "Encuentra un video que enseñe cómo hacer un barco de papel.",
+        palabrasClave: ["barco de papel", "origami barco", "hacer barco de papel"],
+        pestanaRequerida: "Videos",
+        pista: "Escribe «barco de papel» y haz clic en la pestaña 🎬 Videos.",
+        explicacionExito: "¡Genial! En la pestaña Videos encontramos tutoriales paso a paso para aprender manualidades.",
+        resultados: [
+          {
+            emoji: "✈️📄",
+            fondo: "linear-gradient(135deg, #BBDEFB, #64B5F6)",
+            titulo: "Cómo doblar un avión de papel volador",
+            canal: "Manualidades Kids TV",
+            duracion: "04:12",
+            correcto: false
+          },
+          {
+            emoji: "⛵📄",
+            fondo: "linear-gradient(135deg, #B2EBF2, #26C6DA)",
+            titulo: "Cómo hacer un Barco de Papel paso a paso (Origami fácil)",
+            canal: "Origami para Niños",
+            duracion: "03:25",
+            correcto: true
+          },
+          {
+            emoji: "🐸🟢",
+            fondo: "linear-gradient(135deg, #DCEDC8, #9CCC65)",
+            titulo: "Rana saltarina de papel muy divertida",
+            canal: "Arte y Papel",
+            duracion: "05:10",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 4 -------------------------
+      {
+        id: 4,
+        mision: "¿Cuántos colores tiene el arcoíris? Busca la respuesta.",
+        palabrasClave: ["arcoiris", "colores arcoiris", "cuantos colores tiene el arcoiris"],
+        pestanaRequerida: "Todo",
+        pista: "Escribe «arcoiris» o «colores arcoiris» y busca en la pestaña 📄 Todo.",
+        explicacionExito: "¡Excelente! El arcoíris tiene 7 colores: rojo, naranja, amarillo, verde, cian, azul y violeta.",
+        resultados: [
+          {
+            titulo: "Los 3 colores primarios para pintar",
+            url: "www.arteescolar.edu › colores-primarios",
+            descripcion: "El amarillo, el azul y el rojo son los 3 colores primarios con los que podemos mezclar muchos otros.",
+            correcto: false
+          },
+          {
+            titulo: "¿Cuántos colores tiene el arcoíris? - Ciencia para Niños",
+            url: "www.cienciadivertida.edu › clima › arcoiris",
+            descripcion: "🌈 El arcoíris tiene 7 colores: rojo, naranja, amarillo, verde, azul claro, añil y violeta. Aparece cuando llueve y sale el sol.",
+            correcto: true
+          },
+          {
+            titulo: "Semáforo vial: 3 colores que debes conocer",
+            url: "www.seguridadvialkids.edu › semaforo",
+            descripcion: "El semáforo solo tiene 3 colores: rojo para detenerse, amarillo para pensar y verde para avanzar.",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 5 -------------------------
+      {
+        id: 5,
+        mision: "¡Vamos a viajar! Encuentra un mapa de Colombia.",
+        palabrasClave: ["mapa colombia", "colombia mapa", "mapa de colombia"],
+        pestanaRequerida: "Imágenes",
+        pista: "Escribe «mapa de colombia» y recuerda seleccionar la pestaña 🖼️ Imágenes.",
+        explicacionExito: "¡Muy bien! Identificaste el mapa de Colombia con sus colores amarillo, azul y rojo.",
+        resultados: [
+          {
+            emoji: "🗼🥐🇫🇷",
+            fondo: "linear-gradient(135deg, #E3F2FD, #BBDEFB)",
+            titulo: "Mapa turístico de Francia (Europa)",
+            correcto: false
+          },
+          {
+            esMapaColombia: true,
+            fondo: "linear-gradient(135deg, #FFF9C4, #E1F5FE)",
+            titulo: "Mapa de Colombia (Amarillo, Azul y Rojo)",
+            correcto: true
+          },
+          {
+            emoji: "🦘🐨🇦🇺",
+            fondo: "linear-gradient(135deg, #FFE0B2, #FFCCBC)",
+            titulo: "Mapa de Australia y sus animales",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 6 -------------------------
+      {
+        id: 6,
+        mision: "Busca un documental sobre el dinosaurio T-Rex.",
+        palabrasClave: ["t-rex", "t rex", "dinosaurio", "tiranosaurio", "dinosaurio t-rex"],
+        pestanaRequerida: "Videos",
+        pista: "Escribe «dinosaurio» o «t-rex» y selecciona la pestaña 🎬 Videos.",
+        explicacionExito: "¡Rugido de victoria! Encontraste el documental sobre el famoso Tiranosaurio Rex.",
+        resultados: [
+          {
+            emoji: "🦖🌋",
+            fondo: "linear-gradient(135deg, #FFCCBC, #FF8A65)",
+            titulo: "Documental: El poderoso Tiranosaurio Rex (T-Rex)",
+            canal: "DinoExploradores Kids",
+            duracion: "08:40",
+            correcto: true
+          },
+          {
+            emoji: "🐱🧶",
+            fondo: "linear-gradient(135deg, #F3E5F5, #CE93D8)",
+            titulo: "Gatitos graciosos jugando con estambre",
+            canal: "Mascotas Felices",
+            duracion: "02:15",
+            correcto: false
+          },
+          {
+            emoji: "🐢🥬",
+            fondo: "linear-gradient(135deg, #C8E6C9, #81C784)",
+            titulo: "La vida de las tortugas gigantes en las islas",
+            canal: "Naturaleza Viva",
+            duracion: "06:20",
+            correcto: false
+          }
+        ]
+      },
+
+      // ------------------------- RETO 7 -------------------------
+      {
+        id: 7,
+        mision: "¿Qué comen los osos panda? Encuentra su alimento favorito.",
+        palabrasClave: ["osos panda", "comida panda", "que comen los pandas", "panda"],
+        pestanaRequerida: "Todo",
+        pista: "Escribe «osos panda» o «que comen los pandas» y busca en la pestaña 📄 Todo.",
+        explicacionExito: "¡Increíble! Leíste con mucha atención: el alimento favorito de los osos panda es el bambú.",
+        resultados: [
+          {
+            titulo: "El Oso Polar del Ártico - Alimentación",
+            url: "www.planetafrio.edu › oso-polar",
+            descripcion: "Estos grandes osos blancos viven en el hielo y se alimentan principalmente de carne y peces del océano.",
+            correcto: false
+          },
+          {
+            titulo: "El Oso Pardo de los bosques",
+            url: "www.bosquesdelmundo.edu › oso-pardo",
+            descripcion: "A los osos pardos les encanta atrapar peces como el salmón en los ríos y comer carne pequeña.",
+            correcto: false
+          },
+          {
+            titulo: "¿Qué comen los Osos Panda? Su comida favorita",
+            url: "www.pandaskids.edu › alimentacion-panda",
+            descripcion: "🐼🎋 Los osos panda son súper especiales: casi toda su comida es el BAMBÚ, una planta fresca que mastican todo el día.",
+            correcto: true
+          }
+        ]
+      }
+    ];
+
+    /* ==========================================================================
+       1B. BASE DE DATOS DE LA FASE 2: "¡AHORA HAGÁMOSLO EN GOOGLE REAL!"
+       ==========================================================================
+       ¡HOLA PROFESOR/A!
+       Aquí puedes cambiar o agregar las preguntas que los niños buscarán en el
+       Google Real.
+       - tipo:
+         * "texto": El niño busca información en Google y escribe la respuesta.
+         * "link_imagen": El niño busca en Google Imágenes y pega el link (URL).
+         * "link_video": El niño busca en Google Videos/YouTube y pega el link (URL).
+       ========================================================================== */
+    const RETOS_GOOGLE_REAL = [
+      {
+        id: 1,
+        tipo: "texto",
+        etiquetaPestana: "📄 Buscar en Todo (Escribir respuesta)",
+        claseBadge: "tipo-todo",
+        pregunta: "¿Cuál es la capital de Colombia?",
+        instruccion: "Ve a Google, escribe tu búsqueda y anota aquí el nombre de la ciudad:",
+        placeholder: "Escribe la respuesta aquí...",
+        respuestasValidas: ["bogota", "bogota d c", "santa fe de bogota"]
+      },
+      {
+        id: 2,
+        tipo: "link_imagen",
+        etiquetaPestana: "🖼️ Buscar en Imágenes (Pegar Link)",
+        claseBadge: "tipo-imagen",
+        pregunta: "Busca en Google Imágenes una foto de un «Cachorro de Perro» (o tu animal favorito).",
+        instruccion: "Escribe tu búsqueda en Google, entra a la pestaña Imágenes, copia el link (enlace) y pégalo aquí:",
+        placeholder: "Pega aquí el link (https://...)..."
+      },
+      {
+        id: 3,
+        tipo: "texto",
+        etiquetaPestana: "📄 Buscar en Todo (Escribir respuesta)",
+        claseBadge: "tipo-todo",
+        pregunta: "¿Cuántas patas tiene una araña?",
+        instruccion: "Escribe la pregunta en el buscador de Google y anota aquí tu respuesta:",
+        placeholder: "Escribe cuántas patas tiene...",
+        respuestasValidas: ["8", "ocho", "8 patas", "ocho patas"]
+      },
+      {
+        id: 4,
+        tipo: "link_video",
+        etiquetaPestana: "🎬 Buscar en Videos (Pegar Link)",
+        claseBadge: "tipo-video",
+        pregunta: "Busca en la pestaña Videos de Google una «Canción infantil del Sistema Solar».",
+        instruccion: "Escribe en el buscador de Google, cambia a la pestaña Videos, copia el link y pégalo aquí:",
+        placeholder: "Pega aquí el link del video (https://...)..."
+      },
+      {
+        id: 5,
+        tipo: "texto",
+        etiquetaPestana: "📄 Buscar en Todo (Escribir respuesta)",
+        claseBadge: "tipo-todo",
+        pregunta: "¿Cuál es el planeta más grande del Sistema Solar?",
+        instruccion: "Escribe las palabras clave en Google y anota aquí el nombre del planeta:",
+        placeholder: "Escribe el nombre del planeta...",
+        respuestasValidas: ["jupiter", "el planeta jupiter"]
+      },
+      {
+        id: 6,
+        tipo: "link_imagen",
+        etiquetaPestana: "🖼️ Buscar en Imágenes (Pegar Link)",
+        claseBadge: "tipo-imagen",
+        pregunta: "Busca en Google Imágenes una foto del «Cóndor de los Andes» (el ave nacional de Colombia).",
+        instruccion: "Escribe en el buscador de Google, ve a Imágenes, copia el link de arriba y pégalo en esta cajita:",
+        placeholder: "Pega aquí el link de la imagen (https://...)..."
+      }
+    ];
+
+    /* ==========================================================================
+       2. VARIABLES DE ESTADO DEL JUEGO
+       ========================================================================== */
+    let indiceMisionActual = 0;
+    let pestanaActiva = "Todo";
+    let misionesCompletadas = 0;
+
+    // Almacena las respuestas validadas de la Fase 2 (Google Real)
+    const respuestasGoogleReal = {};
+
+    /* ==========================================================================
+       3. REFERENCIAS A ELEMENTOS DEL DOM
+       ========================================================================== */
+    const vistaFase1 = document.getElementById("vista-fase-1");
+    const vistaFase2 = document.getElementById("vista-fase-2");
+    const btnIrFase1 = document.getElementById("btn-ir-fase1");
+    const btnIrFase2 = document.getElementById("btn-ir-fase2");
+
+    const etiquetaNivel = document.getElementById("etiqueta-nivel");
+    const contadorEstrellas = document.getElementById("contador-estrellas");
+    const porcentajeProgreso = document.getElementById("porcentaje-progreso");
+    const barraProgreso = document.getElementById("barra-progreso");
+    const textoMision = document.getElementById("texto-mision");
+    const botonPista = document.getElementById("boton-pista");
+    const textoPista = document.getElementById("texto-pista");
+
+    const formularioBusqueda = document.getElementById("formulario-busqueda");
+    const inputBusqueda = document.getElementById("input-busqueda");
+    const botonLimpiar = document.getElementById("boton-limpiar");
+    const botonesPestanas = document.querySelectorAll(".pestana");
+    const zonaResultados = document.getElementById("zona-resultados");
+
+    const modalVictoria = document.getElementById("modal-victoria");
+    const iconoModal = document.getElementById("icono-modal");
+    const tituloModal = document.getElementById("titulo-modal");
+    const mensajeModal = document.getElementById("mensaje-modal");
+    const botonSiguienteMision = document.getElementById("boton-siguiente-mision");
+
+    const listaRetosGoogle = document.getElementById("lista-retos-google");
+    const contadorGoogleReal = document.getElementById("contador-google-real");
+    const panelFelicitacionesFinal = document.getElementById("panel-felicitaciones-final");
+    const inputNombreEstudiante = document.getElementById("nombre-estudiante");
+    const inputGradoEstudiante = document.getElementById("grado-estudiante");
+    const btnDescargarPng = document.getElementById("btn-descargar-png");
+    const btnDescargarHtml = document.getElementById("btn-descargar-html");
+
+    /* ==========================================================================
+       4. FUNCIONES DE UTILIDAD (LIMPIEZA DE TEXTO Y VALIDACIÓN)
+       ========================================================================== */
+    function limpiarTexto(texto) {
+      return texto
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Elimina tildes
+        .replace(/[¿?¡!.,;:"]/g, " ")    // Elimina signos de puntuación
+        .replace(/\s+/g, " ")            // Colapsa espacios múltiples
+        .trim();
+    }
+
+    function validarPalabrasClave(textoUsuario, listaPalabrasClave) {
+      const consultaLimpia = limpiarTexto(textoUsuario);
+      if (!consultaLimpia) return false;
+
+      return listaPalabrasClave.some((palabra) => {
+        const claveLimpia = limpiarTexto(palabra);
+        return (
+          consultaLimpia === claveLimpia ||
+          consultaLimpia.includes(claveLimpia)
+        );
+      });
+    }
+
+    /**
+     * Valida si el texto pegado por el niño parece un enlace (URL) web o de imagen/video.
+     */
+    function esUnLinkValido(texto) {
+      const t = texto.trim().toLowerCase();
+      return (
+        t.startsWith("http://") ||
+        t.startsWith("https://") ||
+        t.startsWith("www.") ||
+        t.startsWith("data:image") ||
+        t.includes("google.") ||
+        t.includes("youtube.") ||
+        t.includes("youtu.be") ||
+        t.includes(".com") ||
+        t.includes(".org") ||
+        t.includes(".edu") ||
+        t.includes(".co")
+      );
+    }
+
+    function lanzarConfeti() {
+      if (typeof confetti === "function") {
+        confetti({
+          particleCount: 110,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    /* ==========================================================================
+       5. NAVEGACIÓN ENTRE FASE 1 (SIMULADOR) Y FASE 2 (GOOGLE REAL)
+       ========================================================================== */
+    function mostrarFase1() {
+      vistaFase1.classList.remove("oculto");
+      vistaFase2.classList.add("oculto");
+      btnIrFase1.classList.add("activa");
+      btnIrFase2.classList.remove("activa");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function mostrarFase2() {
+      vistaFase1.classList.add("oculto");
+      vistaFase2.classList.remove("oculto");
+      btnIrFase1.classList.remove("activa");
+      btnIrFase2.classList.add("activa");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    btnIrFase1.addEventListener("click", mostrarFase1);
+    btnIrFase2.addEventListener("click", mostrarFase2);
+
+    /* ==========================================================================
+       6. LÓGICA DE LA FASE 1 (SIMULADOR BUSCADORKIDS)
+       ========================================================================== */
+    function cargarMision() {
+      const misionObj = MISIONES[indiceMisionActual];
+
+      etiquetaNivel.textContent = `🎯 Misión ${indiceMisionActual + 1} de ${MISIONES.length}`;
+      contadorEstrellas.textContent = `⭐ ${misionesCompletadas} / ${MISIONES.length}`;
+
+      const porcentaje = Math.round((misionesCompletadas / MISIONES.length) * 100);
+      porcentajeProgreso.textContent = `${porcentaje}%`;
+      barraProgreso.style.width = `${Math.max(10, porcentaje)}%`;
+
+      textoMision.textContent = misionObj.mision;
+
+      textoPista.style.display = "none";
+      textoPista.textContent = misionObj.pista;
+
+      inputBusqueda.value = "";
+      botonLimpiar.style.display = "none";
+
+      zonaResultados.innerHTML = `
+        <div class="estado-inicial">
+          <div class="ilustracion-inicial">🧭✨</div>
+          <h2>¡Tu misión está lista!</h2>
+          <p>Escribe las palabras clave arriba, elige la pestaña adecuada (<strong>Todo</strong>, <strong>Imágenes</strong> o <strong>Videos</strong>) y haz clic en <strong>Buscar</strong>.</p>
+        </div>
+      `;
+    }
+
+    function ejecutarBusqueda() {
+      const misionObj = MISIONES[indiceMisionActual];
+      const textoIngresado = inputBusqueda.value;
+
+      const palabrasSonCorrectas = validarPalabrasClave(textoIngresado, misionObj.palabrasClave);
+      const pestanaEsCorrecta = (pestanaActiva === misionObj.pestanaRequerida);
+
+      if (!palabrasSonCorrectas || !pestanaEsCorrecta) {
+        mostrarMensajeUps(
+          "¡Ups! Revisa si estás en la pestaña correcta o intenta con otras palabras",
+          !palabrasSonCorrectas
+            ? "💡 Pista rápida: Revisa qué palabras clave te pide la misión."
+            : "💡 ¡Tus palabras están muy bien! Pero para esta misión necesitas buscar en otra pestaña (Todo, Imágenes o Videos)."
+        );
+        return;
+      }
+
+      renderizarResultados(misionObj);
+    }
+
+    function mostrarMensajeUps(tituloPrincipal, consejoAdicional) {
+      zonaResultados.innerHTML = `
+        <div class="mensaje-alerta" role="alert">
+          <div class="icono-alerta">🦊🔍</div>
+          <h3 class="titulo-alerta">${tituloPrincipal}</h3>
+          <p class="detalle-alerta">${consejoAdicional}</p>
+        </div>
+      `;
+    }
+
+    function renderizarResultados(misionObj) {
+      zonaResultados.innerHTML = "";
+
+      if (misionObj.pestanaRequerida === "Todo") {
+        const contenedorLista = document.createElement("div");
+        contenedorLista.className = "lista-resultados-todo";
+
+        misionObj.resultados.forEach((item) => {
+          const tarjeta = document.createElement("article");
+          tarjeta.className = "tarjeta-resultado-todo";
+          tarjeta.innerHTML = `
+            <div class="url-resultado">🌐 ${item.url}</div>
+            <h3 class="titulo-resultado-todo">${item.titulo}</h3>
+            <p class="descripcion-resultado-todo">${item.descripcion}</p>
+          `;
+          tarjeta.addEventListener("click", () => verificarRespuestaSeleccionada(item));
+          contenedorLista.appendChild(tarjeta);
+        });
+
+        zonaResultados.appendChild(contenedorLista);
+      } else if (misionObj.pestanaRequerida === "Imágenes") {
+        const contenedorGrid = document.createElement("div");
+        contenedorGrid.className = "grid-resultados-imagenes";
+
+        misionObj.resultados.forEach((item) => {
+          const tarjeta = document.createElement("article");
+          tarjeta.className = "tarjeta-resultado-imagen";
+
+          const ilustracionHTML = item.esMapaColombia
+            ? `
+              <svg width="130" height="145" viewBox="0 0 120 140" aria-label="Silueta del mapa de Colombia con colores amarillo, azul y rojo" style="filter: drop-shadow(0 6px 10px rgba(0,0,0,0.22));">
+                <defs>
+                  <clipPath id="siluetaColombia">
+                    <path d="M56,6 L68,4 L75,11 L65,20 L72,32 L88,36 L96,48 L108,52 L104,68 L92,74 L98,90 L84,104 L76,126 L68,136 L60,122 L52,110 L34,104 L20,92 L28,76 L22,58 L32,42 L30,26 L44,18 Z" />
+                  </clipPath>
+                </defs>
+                <g clip-path="url(#siluetaColombia)">
+                  <rect x="0" y="0" width="120" height="70" fill="#FCD116" />
+                  <rect x="0" y="70" width="120" height="35" fill="#003893" />
+                  <rect x="0" y="105" width="120" height="35" fill="#CE1126" />
+                </g>
+                <path d="M56,6 L68,4 L75,11 L65,20 L72,32 L88,36 L96,48 L108,52 L104,68 L92,74 L98,90 L84,104 L76,126 L68,136 L60,122 L52,110 L34,104 L20,92 L28,76 L22,58 L32,42 L30,26 L44,18 Z" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" />
+              </svg>
+            `
+            : `<span>${item.emoji}</span>`;
+
+          tarjeta.innerHTML = `
+            <div class="lienzo-imagen" style="background: ${item.fondo};">
+              ${ilustracionHTML}
+            </div>
+            <div class="pie-imagen">${item.titulo}</div>
+          `;
+          tarjeta.addEventListener("click", () => verificarRespuestaSeleccionada(item));
+          contenedorGrid.appendChild(tarjeta);
+        });
+
+        zonaResultados.appendChild(contenedorGrid);
+      } else if (misionObj.pestanaRequerida === "Videos") {
+        const contenedorVideos = document.createElement("div");
+        contenedorVideos.className = "grid-resultados-videos";
+
+        misionObj.resultados.forEach((item) => {
+          const tarjeta = document.createElement("article");
+          tarjeta.className = "tarjeta-resultado-video";
+          tarjeta.innerHTML = `
+            <div class="miniatura-video" style="background: ${item.fondo};">
+              <span>${item.emoji}</span>
+              <div class="boton-play-superpuesto">▶</div>
+              <span class="duracion-video">${item.duracion}</span>
+            </div>
+            <div class="info-video">
+              <h3 class="titulo-video">${item.titulo}</h3>
+              <div class="canal-video">📺 ${item.canal}</div>
+            </div>
+          `;
+          tarjeta.addEventListener("click", () => verificarRespuestaSeleccionada(item));
+          contenedorVideos.appendChild(tarjeta);
+        });
+
+        zonaResultados.appendChild(contenedorVideos);
+      }
+    }
+
+    function verificarRespuestaSeleccionada(resultadoSeleccionado) {
+      const misionObj = MISIONES[indiceMisionActual];
+
+      if (resultadoSeleccionado.correcto) {
+        lanzarConfeti();
+        mostrarModalExito(misionObj);
+      } else {
+        mostrarMensajeUps(
+          "¡Ups! Revisa si estás en la pestaña correcta o intenta con otras palabras",
+          "🧐 Ese resultado era una trampa. ¡Vuelve a presionar «Buscar» y lee con cuidado las 3 opciones!"
+        );
+      }
+    }
+
+    function mostrarModalExito(misionObj) {
+      misionesCompletadas = Math.max(misionesCompletadas, indiceMisionActual + 1);
+      const esUltimaMision = (indiceMisionActual === MISIONES.length - 1);
+
+      if (esUltimaMision) {
+        iconoModal.textContent = "🌐🚀";
+        tituloModal.textContent = "¡Ahora hagámoslo en Google!";
+        mensajeModal.textContent = `${misionObj.explicacionExito} ¡Terminaste los 7 retos de entrenamiento! Ahora vamos a investigar nuevas preguntas en el Google Real.`;
+        botonSiguienteMision.textContent = "🌐 ¡Ir a los Retos en Google Real! ➔";
+      } else {
+        iconoModal.textContent = "🏆🎉";
+        tituloModal.textContent = `¡Reto ${indiceMisionActual + 1} Superado!`;
+        mensajeModal.textContent = misionObj.explicacionExito;
+        botonSiguienteMision.textContent = "Siguiente Misión ➔";
+      }
+
+      contadorEstrellas.textContent = `⭐ ${misionesCompletadas} / ${MISIONES.length}`;
+      const porcentaje = Math.round((misionesCompletadas / MISIONES.length) * 100);
+      porcentajeProgreso.textContent = `${porcentaje}%`;
+      barraProgreso.style.width = `${porcentaje}%`;
+
+      modalVictoria.classList.add("visible");
+    }
+
+    formularioBusqueda.addEventListener("submit", (evento) => {
+      evento.preventDefault();
+      ejecutarBusqueda();
+    });
+
+    inputBusqueda.addEventListener("input", () => {
+      botonLimpiar.style.display = inputBusqueda.value.trim().length > 0 ? "inline-flex" : "none";
+    });
+
+    botonLimpiar.addEventListener("click", () => {
+      inputBusqueda.value = "";
+      botonLimpiar.style.display = "none";
+      inputBusqueda.focus();
+    });
+
+    botonesPestanas.forEach((boton) => {
+      boton.addEventListener("click", () => {
+        botonesPestanas.forEach((b) => b.classList.remove("activa"));
+        boton.classList.add("activa");
+        pestanaActiva = boton.getAttribute("data-pestana");
+
+        if (inputBusqueda.value.trim().length > 0) {
+          ejecutarBusqueda();
+        }
+      });
+    });
+
+    botonPista.addEventListener("click", () => {
+      const estaVisible = textoPista.style.display === "block";
+      textoPista.style.display = estaVisible ? "none" : "block";
+    });
+
+    botonSiguienteMision.addEventListener("click", () => {
+      modalVictoria.classList.remove("visible");
+
+      if (indiceMisionActual < MISIONES.length - 1) {
+        indiceMisionActual++;
+        botonesPestanas.forEach((b) => b.classList.remove("activa"));
+        document.querySelector('.pestana[data-pestana="Todo"]').classList.add("activa");
+        pestanaActiva = "Todo";
+        cargarMision();
+      } else {
+        // Al terminar el Reto 7, pasa directamente a la sesión "¡Ahora hagámoslo en Google Real!"
+        mostrarFase2();
+        lanzarConfeti();
+      }
+    });
+
+    /* ==========================================================================
+       7. LÓGICA DE LA FASE 2: "¡AHORA HAGÁMOSLO EN GOOGLE REAL!"
+       ========================================================================== */
+    function renderizarRetosGoogleReal() {
+      listaRetosGoogle.innerHTML = "";
+
+      RETOS_GOOGLE_REAL.forEach((reto, index) => {
+        const tarjeta = document.createElement("article");
+        tarjeta.className = "tarjeta-reto-google";
+        tarjeta.id = `tarjeta-google-${reto.id}`;
+
+        tarjeta.innerHTML = `
+          <div class="cabecera-reto-google">
+            <span class="numero-reto-google">Reto Google #${index + 1}</span>
+            <span class="insignia-tipo-busqueda ${reto.claseBadge}">${reto.etiquetaPestana}</span>
+          </div>
+          <h3 class="pregunta-reto-google">${reto.pregunta}</h3>
+          <p class="instruccion-reto-google">${reto.instruccion}</p>
+          <div class="fila-respuesta-google">
+            <input
+              type="text"
+              class="input-respuesta-google"
+              id="input-google-${reto.id}"
+              placeholder="${reto.placeholder}"
+              aria-label="${reto.pregunta}"
+            />
+            <button
+              type="button"
+              class="boton-comprobar-reto"
+              data-id="${reto.id}"
+            >
+              ✅ Guardar Respuesta
+            </button>
+          </div>
+          <div class="feedback-reto-google" id="feedback-google-${reto.id}"></div>
+        `;
+
+        const inputEl = tarjeta.querySelector(`#input-google-${reto.id}`);
+        const botonGuardar = tarjeta.querySelector(".boton-comprobar-reto");
+
+        botonGuardar.addEventListener("click", () => validarRetoGoogleIndividual(reto));
+        inputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            validarRetoGoogleIndividual(reto);
+          }
+        });
+
+        listaRetosGoogle.appendChild(tarjeta);
+      });
+    }
+
+    function validarRetoGoogleIndividual(reto) {
+      const inputEl = document.getElementById(`input-google-${reto.id}`);
+      const feedbackEl = document.getElementById(`feedback-google-${reto.id}`);
+      const tarjetaEl = document.getElementById(`tarjeta-google-${reto.id}`);
+      const valor = inputEl.value.trim();
+
+      if (!valor) {
+        feedbackEl.className = "feedback-reto-google error";
+        feedbackEl.textContent = "⚠️ Todavía no has escrito nada. ¡Investiga en Google y escribe o pega tu respuesta!";
+        return;
+      }
+
+      // Validación según el tipo de reto: "texto" vs "link_imagen" / "link_video"
+      if (reto.tipo === "link_imagen" || reto.tipo === "link_video") {
+        if (!esUnLinkValido(valor)) {
+          feedbackEl.className = "feedback-reto-google error";
+          feedbackEl.textContent = "🔗 ¡Ups! Para este reto debes copiar y pegar un LINK (dirección web que empieza con https:// o www.).";
+          return;
+        }
+      } else if (reto.tipo === "texto") {
+        const coincide = validarPalabrasClave(valor, reto.respuestasValidas);
+        if (!coincide) {
+          feedbackEl.className = "feedback-reto-google error";
+          feedbackEl.textContent = "🤔 Esa respuesta no parece exacta. ¡Escribe las palabras clave en Google para investigar el dato correcto!";
+          return;
+        }
+      }
+
+      // ¡Respuesta válida!
+      respuestasGoogleReal[reto.id] = valor;
+      tarjetaEl.classList.add("completada");
+      feedbackEl.className = "feedback-reto-google exito";
+      feedbackEl.textContent = "🌟 ¡Excelente! Tu respuesta ha sido guardada en tu Hoja de Detective.";
+
+      actualizarProgresoGoogleReal();
+    }
+
+    function actualizarProgresoGoogleReal() {
+      const total = RETOS_GOOGLE_REAL.length;
+      const completados = Object.keys(respuestasGoogleReal).length;
+
+      contadorGoogleReal.textContent = `${completados} de ${total} completados`;
+
+      if (completados === total) {
+        lanzarConfeti();
+        panelFelicitacionesFinal.classList.remove("oculto");
+        panelFelicitacionesFinal.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    /* ==========================================================================
+       8. GENERACIÓN Y DESCARGA DE LA HOJA DE RESPUESTAS (HTML Y PNG)
+       ========================================================================== */
+
+    // Escapa caracteres especiales para evitar errores en el HTML descargado
+    function escaparHTML(texto) {
+      return String(texto)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    /**
+     * OPCIÓN 1: Descarga un archivo HTML autónomo y colorido con Diploma de
+     * Felicitaciones y todas las respuestas y links clicables.
+     */
+    btnDescargarHtml.addEventListener("click", () => {
+      const nombre = inputNombreEstudiante.value.trim() || "Súper Detective de Segundo";
+      const grado = inputGradoEstudiante.value.trim() || "2° de Primaria";
+      const fecha = new Date().toLocaleDateString("es-CO", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+
+      const filasGoogleHTML = RETOS_GOOGLE_REAL.map((reto, idx) => {
+        const resp = respuestasGoogleReal[reto.id] || "Completado";
+        const esLink = reto.tipo === "link_imagen" || reto.tipo === "link_video";
+        const hrefSeguro = resp.startsWith("http") ? resp : `https://${resp}`;
+        const contenidoRespuesta = esLink
+          ? `<a href="${escaparHTML(hrefSeguro)}" target="_blank" style="color:#1967D2; word-break:break-all; font-weight:700;">🔗 ${escaparHTML(resp)}</a>`
+          : `<span style="color:#137333; font-weight:800; font-size:1.1rem;">✅ ${escaparHTML(resp)}</span>`;
+
+        return `
+          <tr>
+            <td style="padding:12px; border-bottom:2px solid #E8F0FE; font-weight:800; color:#432C7A;">#${idx + 1} (${reto.etiquetaPestana})</td>
+            <td style="padding:12px; border-bottom:2px solid #E8F0FE; font-weight:700;">${escaparHTML(reto.pregunta)}</td>
+            <td style="padding:12px; border-bottom:2px solid #E8F0FE;">${contenidoRespuesta}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const documentoDescargable = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Hoja de Respuestas - ${escaparHTML(nombre)}</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #F4F8FF; color: #202124; padding: 30px; }
+    .hoja { max-width: 880px; margin: 0 auto; background: #FFF; border: 8px solid #FFD54F; border-radius: 28px; padding: 36px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+    .encabezado { text-align: center; border-bottom: 3px dashed #AECBFA; padding-bottom: 20px; margin-bottom: 24px; }
+    .titulo { font-size: 2.3rem; color: #1E8E3E; margin: 8px 0; font-weight: 900; }
+    .subtitulo { font-size: 1.25rem; color: #1967D2; font-weight: 700; }
+    .datos { display: flex; justify-content: space-around; background: #FFFDE7; border: 2px solid #FFD54F; border-radius: 16px; padding: 14px; margin-bottom: 24px; font-size: 1.1rem; flex-wrap: wrap; gap: 10px; }
+    h3 { color: #2B1B54; margin: 20px 0 10px; font-size: 1.35rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    th { background: #4285F4; color: #FFF; text-align: left; padding: 12px; }
+    .sello-final { text-align: center; background: #E6F4EA; border: 3px solid #34A853; border-radius: 18px; padding: 18px; font-size: 1.2rem; font-weight: 800; color: #137333; }
+    .btn-imprimir { display: inline-block; margin-top: 16px; background: #4285F4; color: #FFF; border: none; padding: 12px 24px; border-radius: 999px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    @media print { .btn-imprimir { display: none; } body { background: #FFF; padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="hoja">
+    <div class="encabezado">
+      <div style="font-size: 4rem;">🏆🔎🌟</div>
+      <div class="titulo">¡FELICITACIONES, SÚPER DETECTIVE DE INTERNET!</div>
+      <div class="subtitulo">Hoja Oficial de Respuestas - BuscadorKids y Google Real</div>
+    </div>
+
+    <div class="datos">
+      <div><strong>👧👦 Estudiante:</strong> ${escaparHTML(nombre)}</div>
+      <div><strong>🏫 Grado:</strong> ${escaparHTML(grado)}</div>
+      <div><strong>📅 Fecha:</strong> ${escaparHTML(fecha)}</div>
+    </div>
+
+    <h3>✅ Parte 1: Entrenamiento en Simulador BuscadorKids (7 de 7 Retos Superados)</h3>
+    <p style="margin-bottom: 18px; font-weight: 600; color: #3C4043;">
+      ⭐ Reto 1 (Todo): La Ballena Azul &nbsp;|&nbsp;
+      ⭐ Reto 2 (Imágenes): Sistema Solar &nbsp;|&nbsp;
+      ⭐ Reto 3 (Videos): Barco de Papel &nbsp;|&nbsp;
+      ⭐ Reto 4 (Todo): 7 Colores del Arcoíris &nbsp;|&nbsp;
+      ⭐ Reto 5 (Imágenes): Mapa de Colombia &nbsp;|&nbsp;
+      ⭐ Reto 6 (Videos): Dinosaurio T-Rex &nbsp;|&nbsp;
+      ⭐ Reto 7 (Todo): Los Osos Panda comen Bambú.
+    </p>
+
+    <h3>🌐 Parte 2: Respuestas y Links Investigados en Google Real</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Reto y Pestaña</th>
+          <th>Pregunta Investigada</th>
+          <th>Respuesta / Link del Estudiante</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filasGoogleHTML}
+      </tbody>
+    </table>
+
+    <div class="sello-final">
+      🎓 ¡FELICITACIONES! Completaste con éxito todas las misiones de búsqueda de información, imágenes y videos.<br>
+      <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir o Guardar como PDF</button>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([documentoDescargable], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      const nombreLimpio = limpiarTexto(nombre).replace(/\s+/g, "_") || "estudiante";
+      enlace.href = url;
+      enlace.download = `Hoja_de_Respuestas_${nombreLimpio}.html`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(url);
+    });
+
+    /**
+     * OPCIÓN 2: Genera y descarga una Imagen PNG tipo Diploma + Hoja de Respuestas
+     * usando HTML5 Canvas para que sea súper fácil de enviar o subir a plataforma.
+     */
+    btnDescargarPng.addEventListener("click", () => {
+      const nombre = inputNombreEstudiante.value.trim() || "Súper Detective de Segundo";
+      const grado = inputGradoEstudiante.value.trim() || "2° de Primaria";
+      const fecha = new Date().toLocaleDateString("es-CO");
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1100;
+      canvas.height = 1120;
+      const ctx = canvas.getContext("2d");
+
+      // Fondo general
+      ctx.fillStyle = "#F4F8FF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Marco dorado exterior
+      ctx.fillStyle = "#FFFFFF";
+      ctx.strokeStyle = "#FFD54F";
+      ctx.lineWidth = 14;
+      ctx.fillRect(35, 35, canvas.width - 70, canvas.height - 70);
+      ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+
+      // Borde interior azul
+      ctx.strokeStyle = "#4285F4";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(52, 52, canvas.width - 104, canvas.height - 104);
+
+      // Cabecera de felicitaciones
+      ctx.fillStyle = "#1E8E3E";
+      ctx.font = "bold 40px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🏆 ¡FELICITACIONES, SÚPER DETECTIVE! 🏆", canvas.width / 2, 120);
+
+      ctx.fillStyle = "#1967D2";
+      ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText("HOJA DE RESPUESTAS COMPLETADA - BUSCADORKIDS Y GOOGLE REAL", canvas.width / 2, 162);
+
+      // Caja de datos del estudiante
+      ctx.fillStyle = "#FFFDE7";
+      ctx.fillRect(80, 188, canvas.width - 160, 68);
+      ctx.strokeStyle = "#FFB300";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(80, 188, canvas.width - 160, 68);
+
+      ctx.fillStyle = "#202124";
+      ctx.font = "bold 22px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`👧👦 Estudiante: ${nombre}`, 105, 230);
+      ctx.fillText(`🏫 Grado: ${grado}`, 600, 230);
+      ctx.fillText(`📅 ${fecha}`, 860, 230);
+
+      // Sección Parte 1
+      ctx.fillStyle = "#432C7A";
+      ctx.font = "bold 23px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText("✅ PARTE 1: Entrenamiento en Simulador BuscadorKids (7/7 Misiones Superadas)", 80, 302);
+
+      ctx.fillStyle = "#3C4043";
+      ctx.font = "19px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText("⭐ 1. Ballena Azul  |  ⭐ 2. Sistema Solar  |  ⭐ 3. Barco de Papel  |  ⭐ 4. Arcoíris (7 colores)", 80, 336);
+      ctx.fillText("⭐ 5. Mapa de Colombia  |  ⭐ 6. Dinosaurio T-Rex  |  ⭐ 7. Osos Panda (Bambú)", 80, 366);
+
+      // Sección Parte 2
+      ctx.fillStyle = "#1967D2";
+      ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText("🌐 PARTE 2: Búsquedas Realizadas en Google Real (6/6 Completadas)", 80, 420);
+
+      let y = 450;
+      RETOS_GOOGLE_REAL.forEach((reto, idx) => {
+        // Fondo de cada fila
+        ctx.fillStyle = idx % 2 === 0 ? "#F8FAFF" : "#EFF6FF";
+        ctx.fillRect(80, y, canvas.width - 160, 88);
+        ctx.strokeStyle = "#DCE6F7";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(80, y, canvas.width - 160, 88);
+
+        ctx.fillStyle = "#2B1B54";
+        ctx.font = "bold 19px 'Segoe UI', Arial, sans-serif";
+        ctx.fillText(`${idx + 1}. ${reto.pregunta}`, 98, y + 32);
+
+        const respuestaOriginal = respuestasGoogleReal[reto.id] || "Completado";
+        const respuestaCorta = respuestaOriginal.length > 78
+          ? respuestaOriginal.substring(0, 75) + "..."
+          : respuestaOriginal;
+
+        ctx.fillStyle = "#137333";
+        ctx.font = "bold 18px 'Segoe UI', Arial, sans-serif";
+        ctx.fillText(`✔ Respuesta / Link: ${respuestaCorta}`, 98, y + 66);
+
+        y += 98;
+      });
+
+      // Sello final
+      ctx.fillStyle = "#E6F4EA";
+      ctx.fillRect(80, 1042, canvas.width - 160, 32);
+      ctx.fillStyle = "#137333";
+      ctx.font = "bold 19px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🎓 ¡Excelente trabajo! Sabes buscar información, imágenes y videos en Internet.", canvas.width / 2, 1065);
+
+      // Descargar imagen PNG
+      const enlace = document.createElement("a");
+      const nombreLimpio = limpiarTexto(nombre).replace(/\s+/g, "_") || "estudiante";
+      enlace.download = `Diploma_Respuestas_${nombreLimpio}.png`;
+      enlace.href = canvas.toDataURL("image/png");
+      enlace.click();
+    });
+
+    /* ==========================================================================
+       9. INICIALIZAR EL JUEGO AL ABRIR LA PÁGINA
+       ========================================================================== */
+    cargarMision();
+    renderizarRetosGoogleReal();
+  </script>
+</body>
+</html>
